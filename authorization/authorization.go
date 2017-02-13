@@ -114,3 +114,7 @@ func ReloadUserfile() Userfile {
 
 	return userfile
 }
+
+func init() {
+	ReloadUserfile()
+}
