@@ -1,0 +1,31 @@
+{
+    "users": [
+        {
+            "username": "johndoe",
+            "masks": [
+                "johndoe@.+"
+            ]
+        },
+        {
+            "username": "janedoe",
+            "masks": [
+                "jane@.+"
+            ]
+        }
+    ],
+    "channels": [
+        {
+            "channel": "mychannel",
+            "admins": [
+                "johndoe",
+                "janedoe"
+            ],
+            "authors": [
+                "jamedoe"
+            ],
+            "deleters": [
+                "johndoe"
+            ]
+        }
+    ]
+}
