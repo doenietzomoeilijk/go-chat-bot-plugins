@@ -115,6 +115,22 @@ func ReloadUserfile() Userfile {
 	return userfile
 }
 
+func reloadUsers(command *bot.Cmd) (msg string, err error) {
+	if Authorize(command.User, command.Channel, "admin") == false {
+		return
+	}
+
+	ReloadUserfile()
+
+	return
+}
+
 func init() {
 	ReloadUserfile()
+
+	bot.RegisterCommand(
+		"reloadusers",
+		"Reload the user file",
+		"",
+		reloadUsers)
 }
