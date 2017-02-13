@@ -1,0 +1,4 @@
+package quotes
+
+func init() {
+}
