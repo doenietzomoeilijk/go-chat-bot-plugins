@@ -16,15 +16,19 @@
     "channels": [
         {
             "channel": "mychannel",
-            "admins": [
-                "johndoe",
-                "janedoe"
-            ],
-            "authors": [
-                "jamedoe"
-            ],
-            "deleters": [
-                "johndoe"
+            "roles": [
+                {
+                    "role": "admin",
+                    "users": ["johndoe"]
+                },
+                {
+                    "role": "author",
+                    "users": ["johndoe", "janedoe"]
+                },
+                {
+                    "role": "delete",
+                    "users": ["johndoe"]
+                }
             ]
         }
     ]

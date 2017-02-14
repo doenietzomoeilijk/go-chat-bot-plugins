@@ -14,15 +14,6 @@ var (
 	userfile Userfile
 )
 
-// Admin can do anything in a channel.
-const Admin = "admin"
-
-// Author can add a quote to the quote database.
-const Author = "author"
-
-// Deleter can delete a quote from the database.
-const Deleter = "deleter"
-
 // Userfile reflects the entire JSON file.
 type Userfile struct {
 	Users    []User    `json:"users"`
@@ -37,10 +28,14 @@ type User struct {
 
 // Channel holds channel name and various user types and their Users.
 type Channel struct {
-	Channel  string `json:"channel"`
-	Admins   []string
-	Authors  []string `json:"authors"`
-	Deleters []string `json:"deleters"`
+	Channel string `json:"channel"`
+	Roles   []Role
+}
+
+// Role is a type of action a User can do on a Channel.
+type Role struct {
+	Role  string
+	Users []string
 }
 
 // Authorize a bot User against a role in a channel.
@@ -50,23 +45,21 @@ func Authorize(user *bot.User, channel string, role string) bool {
 		return false
 	}
 
-	var list []string
 	for _, Channel := range userfile.Channels {
 		if channel != Channel.Channel {
 			continue
 		}
-		switch role {
-		case Admin:
-			list = Channel.Admins
-		case Author:
-			list = Channel.Authors
-		case Deleter:
-			list = Channel.Deleters
-		default:
-			return false
+
+		var usersInRole []string
+		for _, crole := range Channel.Roles {
+			if crole.Role != role {
+				continue
+			} else {
+				usersInRole = crole.Users
+			}
 		}
 
-		for _, uname := range list {
+		for _, uname := range usersInRole {
 			if uname == "*" || uname == username {
 				return true
 			}
@@ -87,7 +80,7 @@ func FullHostmask(user *bot.User) []byte {
 func FindUsername(host []byte) (username string, err error) {
 	for _, user := range userfile.Users {
 		for _, mask := range user.Masks {
-			match, err := regexp.Match(mask, host)
+			match, err := regexp.Match(fmt.Sprintf("^%s$", mask), host)
 			if err != nil {
 				return "", err
 			}
