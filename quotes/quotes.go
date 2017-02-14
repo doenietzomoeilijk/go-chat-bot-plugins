@@ -55,7 +55,7 @@ func setupDb() {
 func addQuote(command *bot.Cmd) (msg string, err error) {
 	var insertID int64
 
-	if authorization.Authorize(command.User, command.Channel, authorization.Author) == false {
+	if authorization.Authorize(command.User, command.Channel, "author") == false {
 		return
 	}
 
