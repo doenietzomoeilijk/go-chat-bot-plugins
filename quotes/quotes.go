@@ -89,10 +89,14 @@ func queryToQuote(w map[string]interface{}, num uint) (Q Quote) {
 	fields := "id, channel, author, timestamp, content"
 	query := "SELECT %s FROM quotes WHERE deleted = 0"
 	var binds []interface{}
+	var usedLike bool
 
 	for where, bind := range w {
 		query += fmt.Sprintf(" AND %s", where)
 		binds = append(binds, bind)
+		if strings.Contains(where, "LIKE") {
+			usedLike = true
+		}
 	}
 
 	var count int
@@ -115,7 +119,7 @@ func queryToQuote(w map[string]interface{}, num uint) (Q Quote) {
 
 	row := db.QueryRow(query, binds...)
 	err = row.Scan(&Q.ID, &Q.Channel, &Q.Author, &Q.Timestamp, &Q.Content)
-	if count > 1 {
+	if count > 1 && usedLike {
 		Q.Content += fmt.Sprintf(" (%d/%d)", num, count)
 	}
 
