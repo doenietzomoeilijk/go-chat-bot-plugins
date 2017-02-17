@@ -14,10 +14,23 @@ func init() {
 		"",
 		func(command *bot.Cmd) (msg string, err error) {
 			msg = fmt.Sprintf(
-				"channel=%s, hostmask=%s, args=%#v",
-				command.Channel,
+				"command, hostmask=%s, args=%#v, channel=%#v",
 				authorization.FullHostmask(command.User),
-				command.Args)
+				command.Args,
+				command.ChannelData,
+			)
+
+			return
+		})
+	bot.RegisterPassiveCommand(
+		"echo",
+		func(command *bot.PassiveCmd) (msg string, err error) {
+			msg = fmt.Sprintf(
+				"passivecommand, hostmask=%s, raw=%#v, channel=%#v",
+				authorization.FullHostmask(command.User),
+				command.Raw,
+				command.ChannelData,
+			)
 
 			return
 		})
