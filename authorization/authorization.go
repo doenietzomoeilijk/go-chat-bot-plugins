@@ -39,14 +39,14 @@ type Role struct {
 }
 
 // Authorize a bot User against a role in a channel.
-func Authorize(user *bot.User, channel string, role string) bool {
+func Authorize(user *bot.User, channel *bot.ChannelData, role string) bool {
 	username, err := FindUsername(FullHostmask(user))
 	if err != nil {
 		return false
 	}
 
 	for _, Channel := range userfile.Channels {
-		if channel != Channel.Channel {
+		if channel.IsPrivate || channel.Channel != Channel.Channel {
 			continue
 		}
 
@@ -103,13 +103,13 @@ func ReloadUserfile() Userfile {
 	}
 
 	json.Unmarshal(file, &userfile)
-	log.Printf("Reloaded userfile: %#v\n", userfile)
+	log.Println("Loaded userfile")
 
 	return userfile
 }
 
 func reloadUsers(command *bot.Cmd) (msg string, err error) {
-	if Authorize(command.User, command.Channel, "admin") == false {
+	if Authorize(command.User, command.ChannelData, "admin") == false {
 		return
 	}
 
