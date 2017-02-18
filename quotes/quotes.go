@@ -55,7 +55,7 @@ func setupDb() {
 func addQuote(command *bot.Cmd) (msg string, err error) {
 	var insertID int64
 
-	if authorization.Authorize(command.User, command.Channel, "author") == false {
+	if authorization.Authorize(command.User, command.ChannelData, "author") == false {
 		return
 	}
 
@@ -80,6 +80,7 @@ func addQuote(command *bot.Cmd) (msg string, err error) {
 	insertID, err = res.LastInsertId()
 	if err == nil {
 		msg = fmt.Sprintf("Quote inserted with id %d.", insertID)
+		log.Println(msg)
 	}
 
 	return
