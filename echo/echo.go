@@ -15,7 +15,7 @@ func init() {
 		func(command *bot.Cmd) (msg string, err error) {
 			msg = fmt.Sprintf(
 				"command, hostmask=%s, args=%#v, channel=%#v",
-				authorization.FullHostmask(command.User),
+				authorization.HostFromUser(command.User),
 				command.Args,
 				command.ChannelData,
 			)
@@ -27,7 +27,7 @@ func init() {
 		func(command *bot.PassiveCmd) (msg string, err error) {
 			msg = fmt.Sprintf(
 				"passivecommand, hostmask=%s, raw=%#v, channel=%#v",
-				authorization.FullHostmask(command.User),
+				authorization.HostFromUser(command.User),
 				command.Raw,
 				command.ChannelData,
 			)

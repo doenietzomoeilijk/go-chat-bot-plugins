@@ -1,35 +1,30 @@
 {
-    "users": [
-        {
-            "username": "johndoe",
+    "users": {
+        "johndoe": {
             "masks": [
-                "johndoe@.+"
+                "*!johndoe@.+"
             ]
         },
-        {
-            "username": "janedoe",
+        "janedoe": {
             "masks": [
-                "jane@.+"
+                "jane!jane@.+"
             ]
         }
-    ],
-    "channels": [
-        {
-            "channel": "mychannel",
-            "roles": [
-                {
-                    "role": "admin",
-                    "users": ["johndoe"]
-                },
-                {
-                    "role": "author",
-                    "users": ["johndoe", "janedoe"]
-                },
-                {
-                    "role": "delete",
-                    "users": ["johndoe"]
-                }
-            ]
+    },
+    "channels": {
+        "mychannel": {
+            "roles": {
+                "admin": [
+                    "johndoe"
+                ],
+                "author": [
+                    "johndoe",
+                    "janedoe"
+                ],
+                "delete": [
+                    "johndoe"
+                ]
+            }
         }
-    ]
+    }
 }

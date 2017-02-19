@@ -55,8 +55,9 @@ func setupDb() {
 func addQuote(command *bot.Cmd) (msg string, err error) {
 	var insertID int64
 
-	if authorization.Authorize(command.User, command.ChannelData, "author") == false {
-		return
+	author, err := authorization.Authorize(command.ChannelData, "author", command.User)
+	if err != nil {
+		return "", nil
 	}
 
 	quote := strings.Join(command.Args, " ")
@@ -69,7 +70,7 @@ func addQuote(command *bot.Cmd) (msg string, err error) {
         (channel, author, timestamp, content)
         VALUES (?, ?, CURRENT_TIMESTAMP, ?)`,
 		command.Channel,
-		command.User.Nick,
+		author,
 		quote)
 
 	if err != nil {
@@ -81,6 +82,9 @@ func addQuote(command *bot.Cmd) (msg string, err error) {
 	if err == nil {
 		msg = fmt.Sprintf("Quote inserted with id %d.", insertID)
 		log.Println(msg)
+	} else {
+		log.Println("error while inserting quote", err)
+		err = nil
 	}
 
 	return
