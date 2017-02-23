@@ -23,20 +23,21 @@ type RandomItem struct {
 }
 
 // GetResponse gives you one of the RandomItem's Responses.
-func (ri RandomItem) GetResponse() string {
+func (ri *RandomItem) GetResponse() string {
 	length := len(ri.Responses)
+	if length < 1 {
+		log.Println("this RandomItem has no responses...")
+		return ""
+	}
+
 	rnd := rand.Intn(length - 1)
 	log.Printf("Grabbing random item %d/%d from %s", rnd, length, ri.Keyword)
 
 	return ri.Responses[rnd]
 }
 
-func (ri RandomItem) Dump() string {
-	return fmt.Sprintf("keyword=%s aliases=%v responses=%#v", ri.Keyword, ri.Aliases, ri.Responses)
-}
-
-// Randomlines holds our RandomItems, mapped to their primary keyword.
 var (
+	// Randomlines holds our RandomItems, mapped to their primary keyword.
 	Randomlines    map[string]RandomItem
 	aliasToKeyword map[string]string
 	passives       []string
@@ -54,51 +55,60 @@ func loadRandomlines() {
 
 	file, err := ioutil.ReadFile("randomlines.json")
 	if err != nil {
-		log.Fatalf("Couldn't read file: %#v", err)
+		log.Fatalln("Couldn't read file:", err)
 	}
 
 	var parts []RandomItem
 	json.Unmarshal(file, &parts)
 
 	for _, part := range parts {
-		Randomlines[part.Keyword] = part
+		bareKeyword := strings.TrimLeft(part.Keyword, bot.CmdPrefix)
+		isPassive := bareKeyword == part.Keyword
+		Randomlines[bareKeyword] = part
+		maybeAdd(bareKeyword, isPassive)
 
-		maybeAdd(part.Keyword)
 		for _, alias := range part.Aliases {
-			maybeAdd(alias)
-			aliasToKeyword[alias] = part.Keyword
-
+			bareAlias := strings.TrimLeft(alias, bot.CmdPrefix)
+			isPassiveAlias := bareAlias == alias
+			aliasToKeyword[bareAlias] = bareKeyword
+			maybeAdd(bareAlias, isPassiveAlias)
 		}
 	}
 
+	// Set up the regex for the passive command.
 	pattern = fmt.Sprintf("(?i)\\b(%s)\\b", strings.Join(passives, "|"))
 	re = regexp.MustCompile(pattern)
+}
 
-	for _, random := range actives {
+func maybeAdd(s string, p bool) {
+	if p {
+		passives = append(passives, s)
+	} else {
+		actives = append(actives, s)
+		addCommand(s)
+	}
+}
+
+func addCommand(s string) {
+	if _, ok := Randomlines[s]; ok {
 		bot.RegisterCommand(
-			random,
-			fmt.Sprintf("Random line for %s", random),
+			s,
+			fmt.Sprintf("Random line for %s", s),
 			"",
 			func(c *bot.Cmd) (msg string, err error) {
-				msg = Randomlines[random].GetResponse()
+				rnd, _ := Randomlines[s]
+				msg = rnd.GetResponse()
 				return
 			},
 		)
 	}
 }
 
-func maybeAdd(s string) {
-	if strings.HasPrefix(s, bot.CmdPrefix) {
-		actives = append(actives, strings.TrimLeft(s, bot.CmdPrefix))
-	} else {
-		passives = append(passives, s)
-	}
-}
-
 func randompassiveline(c *bot.PassiveCmd) (msg string, err error) {
 	if found := re.FindString(c.Raw); found != "" {
 		keyword := aliasToKeyword[found]
-		msg = Randomlines[keyword].GetResponse()
+		rnd, _ := Randomlines[keyword]
+		msg = rnd.GetResponse()
 	}
 
 	return
@@ -113,22 +123,6 @@ func init() {
 		"",
 		func(c *bot.Cmd) (msg string, err error) {
 			loadRandomlines()
-			msg = "Loaded lines"
-
-			return
-		},
-	)
-	bot.RegisterCommand(
-		"dump",
-		"Dump the randomlines for a keyword",
-		"keyword",
-		func(c *bot.Cmd) (msg string, err error) {
-			ri, ok := Randomlines[c.Args[0]]
-			if !ok {
-				msg = "not found"
-			} else {
-				ri.Dump()
-			}
 
 			return
 		},
