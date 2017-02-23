@@ -1,0 +1,14 @@
+[
+    {
+        "keyword": "!scrum",
+        "source": "http://www.agile-process.org/proverbs.html",
+        "aliases": [
+            "agile"
+        ],
+        "responses": [
+            "The best way to meet customer objectives is to explicitly schedule their completion.",
+            "Trying to catch up is the fastest way to get further behind.",
+            "When you only have responsibility you will know worry, but when you also have authority you will know opportunity."
+        ]
+    }
+]
