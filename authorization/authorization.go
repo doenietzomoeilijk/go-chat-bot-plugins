@@ -100,12 +100,14 @@ func ReloadUserfile() Userfile {
 
 	json.Unmarshal(file, &userfile)
 	log.Println("Loaded userfile")
+	log.Printf("%+v\n", userfile)
 
 	return userfile
 }
 
 func reloadUsers(command *bot.Cmd) (msg string, err error) {
 	if _, err := Authorize(command.ChannelData, "admin", command.User); err != nil {
+		log.Println("Couldn't authorize:", err)
 		return "", nil
 	}
 
