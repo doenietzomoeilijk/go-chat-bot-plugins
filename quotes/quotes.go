@@ -57,6 +57,7 @@ func addQuote(command *bot.Cmd) (msg string, err error) {
 
 	author, err := authorization.Authorize(command.ChannelData, "author", command.User)
 	if err != nil {
+		log.Println("Could not authorize:", err)
 		return "", nil
 	}
 
@@ -74,6 +75,7 @@ func addQuote(command *bot.Cmd) (msg string, err error) {
 		quote)
 
 	if err != nil {
+		log.Println("Could not insert quote:", err)
 		err = errors.New("could not insert quote")
 		return
 	}
