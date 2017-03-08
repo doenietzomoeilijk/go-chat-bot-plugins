@@ -17,7 +17,8 @@ import (
 )
 
 var (
-	db *sql.DB
+	db      *sql.DB
+	delStmt *sql.Stmt
 )
 
 // Quote holds a singular quote
@@ -49,6 +50,10 @@ func setupDb() {
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS chan ON quotes(channel)`)
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idel ON quotes(deleted)`)
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS cont ON quotes(content)`)
+
+	if delStmt, err = db.Prepare("UPDATE quotes SET deleted = 1 WHERE channel = ? and id = ?"); err != nil {
+		log.Fatalln("Couldn't prepare statement:", err)
+	}
 }
 
 // Add a quote to the database.
@@ -92,7 +97,7 @@ func addQuote(command *bot.Cmd) (msg string, err error) {
 	return
 }
 
-// Actually run the query, and if needed, get a specific result.
+// Actually run the query, and get a specific result. If num > 0 it'll specify a specific result, if it's -1 it'll give you the latest quote.
 func queryToQuote(w map[string]interface{}, num int) (Q Quote) {
 	fields := "id, channel, author, timestamp, content"
 	query := "SELECT %s FROM quotes WHERE deleted = 0"
@@ -112,7 +117,7 @@ func queryToQuote(w map[string]interface{}, num int) (Q Quote) {
 		query += " ORDER BY id DESC LIMIT 1"
 	}
 
-	var count int = 1
+	var count = 1
 	if num != -1 {
 		countRow := db.QueryRow(fmt.Sprintf(query, "COUNT(*)"), binds...)
 		err = countRow.Scan(&count)
@@ -182,12 +187,46 @@ func getQuote(command *bot.Cmd) (msg string, err error) {
 	return
 }
 
+// Fetch the latest quote from the database.
 func getLastQuote(command *bot.Cmd) (msg string, err error) {
 	m := make(map[string]interface{})
 	m["channel = ?"] = command.Channel
 	Q := queryToQuote(m, -1)
 	if Q.ID != 0 {
 		msg = fmt.Sprintf("#%d: %s", Q.ID, Q.Content)
+	}
+
+	return
+}
+
+// Delete a quote from the database.
+func deleteQuote(c *bot.Cmd) (msg string, err error) {
+	if len(c.Args) < 2 {
+		return "Specify which quote you want to delete with `-id <id>`.", nil
+	}
+
+	author, err := authorization.Authorize(c.ChannelData, "author", c.User)
+	if err != nil {
+		log.Println("Could not authorize:", err)
+		return "", nil
+	}
+
+	id := 0
+	if len(c.Args) == 2 && c.Args[0] == "-id" {
+		id, _ = strconv.Atoi(c.Args[1])
+	}
+
+	if id == 0 {
+		return
+	}
+
+	res, _ := delStmt.Exec(c.Channel, id)
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		msg = "Could not delete quote."
+	} else {
+		log.Printf("Quote id %d deleted by %s.", id, author)
+		msg = "Quote deleted."
 	}
 
 	return
@@ -219,9 +258,13 @@ func init() {
 		"Get the last quote that was added in this channel",
 		"",
 		getLastQuote)
+	bot.RegisterCommand(
+		"delquote",
+		"Delete a quote",
+		"-id <id>",
+		deleteQuote)
 
 	// todo:
-	// - delquote (passive, maybe?)
 	// - quoteinfo
 	// - quotehelp (passive, query only)
 }
