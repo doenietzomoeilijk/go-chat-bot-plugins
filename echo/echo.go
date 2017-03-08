@@ -1,3 +1,4 @@
+// Package echo gives you a simple (but annoying) way to debug raw messages.
 package echo
 
 import (
@@ -15,7 +16,7 @@ func init() {
 		func(command *bot.Cmd) (msg string, err error) {
 			msg = fmt.Sprintf(
 				"command, hostmask=%s, args=%#v, channel=%#v",
-				authorization.HostFromUser(command.User),
+				authorization.Fullhost(command.User),
 				command.Args,
 				command.ChannelData,
 			)
@@ -26,8 +27,8 @@ func init() {
 		"echo",
 		func(command *bot.PassiveCmd) (msg string, err error) {
 			msg = fmt.Sprintf(
-				"passivecommand, hostmask=%s, raw=%#v, channel=%#v",
-				authorization.HostFromUser(command.User),
+				"passivecommand, user=%+v, raw=%#v, channel=%#v",
+				authorization.Fullhost(command.User),
 				command.Raw,
 				command.ChannelData,
 			)
