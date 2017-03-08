@@ -1,3 +1,4 @@
+// Package quotes is your friendly neighbourhood quote monster. It can record, play back and delete quotes.
 package quotes
 
 import (
