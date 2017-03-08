@@ -1,3 +1,5 @@
+[![GoDoc](https://godoc.org/github.com/doenietzomoeilijk/go-chat-bot-plugins?status.svg)](https://godoc.org/github.com/doenietzomoeilijk/go-chat-bot-plugins)
+
 # go-chat-bot-plugins
 
 A collection of plugins for [go-chat-bot](https://github.com/go-chat-bot/bot).
