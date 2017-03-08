@@ -28,9 +28,7 @@ type Quote struct {
 	Content   string    `db:"content"`
 }
 
-/**
- * Set up our DB - make sure it exists and that it has the proper table.
- */
+// Set up our DB - make sure it exists and that it has the proper table.
 func setupDb() {
 	var err error
 
@@ -52,6 +50,7 @@ func setupDb() {
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS cont ON quotes(content)`)
 }
 
+// Add a quote to the database.
 func addQuote(command *bot.Cmd) (msg string, err error) {
 	var insertID int64
 
@@ -61,7 +60,7 @@ func addQuote(command *bot.Cmd) (msg string, err error) {
 		return "", nil
 	}
 
-	quote := strings.Join(command.Args, " ")
+	quote := strings.Trim(command.RawArgs, " ")
 	if quote == "" {
 		return
 	}
@@ -92,11 +91,13 @@ func addQuote(command *bot.Cmd) (msg string, err error) {
 	return
 }
 
-func queryToQuote(w map[string]interface{}, num uint) (Q Quote) {
+// Actually run the query, and if needed, get a specific result.
+func queryToQuote(w map[string]interface{}, num int) (Q Quote) {
 	fields := "id, channel, author, timestamp, content"
 	query := "SELECT %s FROM quotes WHERE deleted = 0"
 	var binds []interface{}
 	var usedLike bool
+	var err error
 
 	for where, bind := range w {
 		query += fmt.Sprintf(" AND %s", where)
@@ -106,17 +107,23 @@ func queryToQuote(w map[string]interface{}, num uint) (Q Quote) {
 		}
 	}
 
-	var count int
-	countRow := db.QueryRow(fmt.Sprintf(query, "COUNT(*)"), binds...)
-	err := countRow.Scan(&count)
+	if num == -1 {
+		query += " ORDER BY id DESC LIMIT 1"
+	}
 
-	if count == 0 || err != nil {
-		return
+	var count int = 1
+	if num != -1 {
+		countRow := db.QueryRow(fmt.Sprintf(query, "COUNT(*)"), binds...)
+		err = countRow.Scan(&count)
+
+		if count == 0 || err != nil {
+			return
+		}
 	}
 
 	if count > 1 {
 		if num == 0 {
-			num = uint(rand.Intn(count)) + 1
+			num = int(rand.Intn(count)) + 1
 		}
 
 		query += fmt.Sprintf(" LIMIT 1 OFFSET %d", num-1)
@@ -141,16 +148,16 @@ func queryToQuote(w map[string]interface{}, num uint) (Q Quote) {
 // Fetch a quote from the database
 func getQuote(command *bot.Cmd) (msg string, err error) {
 	args := command.Args
-	var lastArgNum uint
+	var lastArgNum int
 
 	if len(command.Args) > 0 {
 		lastArg := args[len(args)-1]
 		lan, err := strconv.Atoi(lastArg)
 		if err != nil {
-			lastArgNum = uint(0)
+			lastArgNum = int(0)
 			err = nil
 		} else {
-			lastArgNum = uint(lan)
+			lastArgNum = int(lan)
 			args = args[:len(args)-1]
 
 		}
@@ -167,6 +174,17 @@ func getQuote(command *bot.Cmd) (msg string, err error) {
 	}
 
 	Q := queryToQuote(m, lastArgNum)
+	if Q.ID != 0 {
+		msg = fmt.Sprintf("#%d: %s", Q.ID, Q.Content)
+	}
+
+	return
+}
+
+func getLastQuote(command *bot.Cmd) (msg string, err error) {
+	m := make(map[string]interface{})
+	m["channel = ?"] = command.Channel
+	Q := queryToQuote(m, -1)
 	if Q.ID != 0 {
 		msg = fmt.Sprintf("#%d: %s", Q.ID, Q.Content)
 	}
@@ -195,8 +213,13 @@ func init() {
 		"",
 		getQuote)
 
+	bot.RegisterCommand(
+		"lastquote",
+		"Get the last quote that was added in this channel",
+		"",
+		getLastQuote)
+
 	// todo:
-	// - lastquote
 	// - delquote (passive, maybe?)
 	// - quoteinfo
 	// - quotehelp (passive, query only)
