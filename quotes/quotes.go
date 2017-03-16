@@ -232,6 +232,32 @@ func deleteQuote(c *bot.Cmd) (msg string, err error) {
 	return
 }
 
+// Fetch info about a quote and display it in the channel.
+func quoteInfo(c *bot.Cmd) (msg string, err error) {
+	if len(c.Args) < 2 {
+		return "Specify which quote you want to show info for with `-id <id>`.", nil
+	}
+
+	id := 0
+	if len(c.Args) == 2 && c.Args[0] == "-id" {
+		id, _ = strconv.Atoi(c.Args[1])
+	}
+
+	if id == 0 {
+		return
+	}
+
+	m := make(map[string]interface{})
+	m["channel = ?"] = c.Channel
+	m["id = ?"] = id
+	Q := queryToQuote(m, -1)
+	if Q.ID != 0 {
+		msg = fmt.Sprintf("#%d: quoted by %s on %s", Q.ID, Q.Author, Q.Timestamp.Format("2006-02-01, 15:04"))
+	}
+
+	return
+}
+
 func init() {
 	setupDb()
 
@@ -263,8 +289,9 @@ func init() {
 		"Delete a quote",
 		"-id <id>",
 		deleteQuote)
-
-	// todo:
-	// - quoteinfo
-	// - quotehelp (passive, query only)
+	bot.RegisterCommand(
+		"quoteinfo",
+		"Get info about a quote",
+		"-id <id>",
+		quoteInfo)
 }

@@ -11,3 +11,7 @@ Depending on your user setup (see the documentation about `authorization`), user
 * `!quote <words> [<num>]` Add words to match quotes against them. If several quotes match, an optional `<num>` requests a specific one.
 
 * `!quote -id <id>` All quotes have an ID; use this syntax to request a specific quote.
+
+* `!delquote -id <id>` Remove a quote, specify its ID.
+
+* `!quoteinfo -id <id>` Tells you who recorded that shameful uttering.
