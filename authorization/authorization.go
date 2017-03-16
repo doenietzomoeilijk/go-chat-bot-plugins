@@ -33,11 +33,15 @@ type User struct {
 
 // Match tries to match a host against known Users.
 func (user *User) Match(host string) bool {
+	log.Println("User", user.Username, "being matched against host", host)
 	for _, mask := range user.Masks {
+		log.Println("Trying mask", mask)
 		if match := mask.MatchString(host); match {
+			log.Println("Yay, found him!")
 			return true
 		}
 	}
+	log.Println("not found in user.Match")
 
 	return false
 }
@@ -66,6 +70,7 @@ var (
 
 // MatchHost tries to find a hostname, returning a username if found
 func MatchHost(host string) (username string, err error) {
+	log.Println("MatchHost", host)
 	for uname, user := range userfile.Users {
 		if user.Match(host) {
 			return uname, nil
@@ -93,6 +98,8 @@ func Authorize(c *bot.ChannelData, r string, b *bot.User) (uname string, err err
 	fullhost := Fullhost(b)
 	log.Println("trying full host", fullhost)
 	for _, username := range usernames {
+		log.Println("Trying username", username)
+
 		if username == "*" {
 			log.Println("anyone can do this")
 			return b.Nick, nil
