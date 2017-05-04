@@ -252,7 +252,7 @@ func quoteInfo(c *bot.Cmd) (msg string, err error) {
 	m["id = ?"] = id
 	Q := queryToQuote(m, -1)
 	if Q.ID != 0 {
-		msg = fmt.Sprintf("#%d: quoted by %s on %s", Q.ID, Q.Author, Q.Timestamp.Format("2006-02-01, 15:04"))
+		msg = fmt.Sprintf("#%d: quoted by %s on %s", Q.ID, Q.Author, Q.Timestamp.Format("2006-01-02, 15:04"))
 	}
 
 	return
