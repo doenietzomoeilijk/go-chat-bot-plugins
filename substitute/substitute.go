@@ -2,10 +2,8 @@
 package substitute
 
 import (
-	"regexp"
-
 	"fmt"
-
+	"regexp"
 	"strings"
 
 	"github.com/go-chat-bot/bot"
@@ -17,31 +15,35 @@ type nickAndLine struct {
 }
 
 var (
-	lines     []nickAndLine
+	lines     map[string][]nickAndLine
 	re        *regexp.Regexp
 	keepLines int
+	bold      string
 )
 
 func handleSub(cmd *bot.PassiveCmd) (msg string, err error) {
-	linesLen := len(lines)
-	if found := re.FindStringSubmatch(cmd.Raw); found != nil {
+	linesLen := len(lines[cmd.Channel])
+	if found := re.FindStringSubmatch(cmd.Raw); found != nil && found[1] != " " {
 		// Found the string, now loop through our history and see if we can do
 		// a substitution.
+		found[2] = strings.Replace(bold, "", found[2], -1)
 		for i := linesLen; i > 0; i-- {
-			l := lines[i-1]
+			l := lines[cmd.Channel][i-1]
 			if strings.Contains(l.line, found[1]) {
-				repl := fmt.Sprintf("%c%s%c", 2, found[2], 2)
+				repl := fmt.Sprintf("%s%s%s", bold, found[2], bold)
 				replaced := strings.Replace(l.line, found[1], repl, -1)
-				msg = fmt.Sprintf("<%s> %s", l.nick, replaced)
+				msg = fmt.Sprintf("<%s> %s (%d)", l.nick, replaced, i)
+
+				return
 			}
 		}
 	} else {
 		// Not found, just add this line (making sure we don't cross our limit)
 		if linesLen >= keepLines {
-			lines = lines[1:]
+			lines[cmd.Channel] = lines[cmd.Channel][1:]
 		}
 
-		lines = append(lines, nickAndLine{cmd.User.Nick, cmd.Raw})
+		lines[cmd.Channel] = append(lines[cmd.Channel], nickAndLine{cmd.User.Nick, cmd.Raw})
 	}
 
 	return
@@ -49,6 +51,8 @@ func handleSub(cmd *bot.PassiveCmd) (msg string, err error) {
 
 func init() {
 	keepLines = 20
+	bold = fmt.Sprintf("%c", 2)
 	re = regexp.MustCompile(`^s/([^\/]+)/([^\/]+)/?`)
+	lines = make(map[string][]nickAndLine)
 	bot.RegisterPassiveCommand("substitute", handleSub)
 }
