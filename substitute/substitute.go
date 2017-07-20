@@ -32,7 +32,7 @@ func handleSub(cmd *bot.PassiveCmd) (msg string, err error) {
 			if strings.Contains(l.line, found[1]) {
 				repl := fmt.Sprintf("%s%s%s", bold, found[2], bold)
 				replaced := strings.Replace(l.line, found[1], repl, -1)
-				msg = fmt.Sprintf("<%s> %s (%d)", l.nick, replaced, i)
+				msg = fmt.Sprintf("<%s> %s", l.nick, replaced)
 
 				return
 			}
