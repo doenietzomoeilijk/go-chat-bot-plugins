@@ -23,7 +23,14 @@ var (
 
 func handleSub(cmd *bot.PassiveCmd) (msg string, err error) {
 	linesLen := len(lines[cmd.Channel])
-	if found := re.FindStringSubmatch(cmd.Raw); found != nil && found[1] != " " {
+	if found := re.FindStringSubmatch(cmd.Raw); found != nil {
+		// Weed out the empty strings and non-substitutions.
+		found[1] = strings.Replace(found[1], bold, "", -1)
+		found[2] = strings.Replace(found[2], bold, "", -1)
+		if found[1] == " " || found[1] == found[2] {
+			return
+		}
+
 		// Found the string, now loop through our history and see if we can do
 		// a substitution.
 		// found[2] = strings.Replace(bold, "", found[2], -1)

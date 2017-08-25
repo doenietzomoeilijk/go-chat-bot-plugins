@@ -27,10 +27,11 @@ func init() {
 		"echo",
 		func(command *bot.PassiveCmd) (msg string, err error) {
 			msg = fmt.Sprintf(
-				"passivecommand, user=%+v, raw=%#v, channel=%#v",
+				"passivecommand, user=%+v, raw=%#v, channel=%#v, isAction=%#v",
 				authorization.Fullhost(command.User),
 				command.Raw,
 				command.ChannelData,
+				command.MessageData.IsAction,
 			)
 
 			return
